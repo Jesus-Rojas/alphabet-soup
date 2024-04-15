@@ -1,6 +1,7 @@
 import { useState } from "react";
 import _ from 'lodash';
 import { FormDataKeys } from "../types/form-data-keys.enum";
+import { FormStatus } from "../types/form-status.enum";
 
 export function useAlphabetSoup() {
   const [formData, setFormData] = useState<Record<FormDataKeys, string>>({
@@ -8,7 +9,7 @@ export function useAlphabetSoup() {
     [FormDataKeys.Rows]: '10',
     [FormDataKeys.Search]: '',
   });
-
+  const [formStatus, setFormStatus] = useState(FormStatus.FillColsAndRows);
   const [alphabetSoup, setAlphabetSoup] = useState<string[][]>([]);
 
   const updateFormData = (value: string, key: FormDataKeys) => {
@@ -25,6 +26,7 @@ export function useAlphabetSoup() {
         type="text"
         value={formData[key]}
         onChange={(e) => updateFormData(e.target.value, key)}
+        disabled={formStatus !== FormStatus.FillColsAndRows}
       />
     </div>
   );
@@ -41,12 +43,25 @@ export function useAlphabetSoup() {
     }
 
     setAlphabetSoup(new Array(rows).fill('').map(() => new Array(cols).fill('')));
+    setFormStatus(FormStatus.CreatedAlphabetSoup);
   }
 
   const fillFieldOfLetterSoup = (value: string, indexRow: number, indexCol: number) => {
     const newAlphabetSoup = _.cloneDeep(alphabetSoup);
-    newAlphabetSoup[indexRow][indexCol] = value;
+    newAlphabetSoup[indexRow][indexCol] = value.length ? value[0] : '';
     setAlphabetSoup(newAlphabetSoup);
+  }
+
+  const resetForm = () => {
+    setFormStatus(FormStatus.FillColsAndRows);
+  }
+
+  const saveAlphabetSoup = () => {
+    if (alphabetSoup.some((row) => row.some((col) => col === ''))) {
+      return alert('All fields are required')
+    }
+
+    setFormStatus(FormStatus.FilledAlphabetSoup);
   }
 
   return {
@@ -55,5 +70,8 @@ export function useAlphabetSoup() {
     alphabetSoup,
     fillFieldOfLetterSoup,
     formData,
+    formStatus,
+    resetForm,
+    saveAlphabetSoup,
   }
 }
