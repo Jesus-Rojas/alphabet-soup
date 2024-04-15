@@ -1,0 +1,11 @@
+.container-alphabet-group {
+  // (--cols | --rows) Ambas se renderizan desde react.
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 40px);
+  grid-template-rows: repeat(var(--rows), 40px);
+
+  & input {
+    text-align: center;
+    text-transform: uppercase;
+  }
+}
