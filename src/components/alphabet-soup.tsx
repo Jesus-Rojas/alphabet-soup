@@ -13,6 +13,7 @@ export function AlphabetSoup() {
     formStatus,
     resetForm,
     saveAlphabetSoup,
+    renderSearch,
   } = useAlphabetSoup();
 
   return (
@@ -20,6 +21,8 @@ export function AlphabetSoup() {
       {renderInputNumbers(FormDataKeys.Cols, 'Cols')}
       <br />
       {renderInputNumbers(FormDataKeys.Rows, 'Rows')}
+      <br />
+      {renderSearch()}
       <br />
       <button
         onClick={createAlphabetSoup}

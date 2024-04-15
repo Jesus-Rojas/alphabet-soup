@@ -2,15 +2,16 @@ import { useState } from "react";
 import _ from 'lodash';
 import { FormDataKeys } from "../types/form-data-keys.enum";
 import { FormStatus } from "../types/form-status.enum";
+import * as alphabetSoupMock from "../mocks/alphabet-soup.mock";
 
 export function useAlphabetSoup() {
   const [formData, setFormData] = useState<Record<FormDataKeys, string>>({
-    [FormDataKeys.Cols]: '10',
-    [FormDataKeys.Rows]: '10',
+    [FormDataKeys.Cols]: alphabetSoupMock.cols,
+    [FormDataKeys.Rows]: alphabetSoupMock.rows,
     [FormDataKeys.Search]: '',
   });
-  const [formStatus, setFormStatus] = useState(FormStatus.FillColsAndRows);
-  const [alphabetSoup, setAlphabetSoup] = useState<string[][]>([]);
+  const [formStatus, setFormStatus] = useState(FormStatus.FilledAlphabetSoup);
+  const [alphabetSoup, setAlphabetSoup] = useState<string[][]>(alphabetSoupMock.alphabetSoup);
 
   const updateFormData = (value: string, key: FormDataKeys) => {
     setFormData((prevState) => ({
@@ -64,6 +65,38 @@ export function useAlphabetSoup() {
     setFormStatus(FormStatus.FilledAlphabetSoup);
   }
 
+  const findWordInAlphabetSoup = () => {
+    const search = formData[FormDataKeys.Search].toLowerCase();
+    const wasFound = alphabetSoup.some((row) => {
+      const rowString = row.join('').toLowerCase();
+      
+      if (rowString.includes(search)) {
+        alert('Word found horizontally');
+        return true;
+      };
+      
+      const rowReverseString = [...row].reverse().join('').toLowerCase();
+      if (rowReverseString.includes(search)) {
+        alert('Word found horizontally (upside down)');
+        return true;
+      };
+    });
+    
+    if (!wasFound) return alert('Word not found');
+  }
+
+  const renderSearch = () => (
+    <div>
+      <input
+        type="text"
+        value={formData[FormDataKeys.Search]}
+        onChange={(e) => updateFormData(e.target.value, FormDataKeys.Search)}
+      />
+      {' '}
+      <button onClick={findWordInAlphabetSoup}>Search</button>
+    </div>
+  )
+
   return {
     renderInputNumbers,
     createAlphabetSoup,
@@ -73,5 +106,6 @@ export function useAlphabetSoup() {
     formStatus,
     resetForm,
     saveAlphabetSoup,
+    renderSearch,
   }
 }
