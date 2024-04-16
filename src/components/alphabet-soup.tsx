@@ -18,11 +18,11 @@ export function AlphabetSoup() {
 
   return (
     <>
-      {renderInputNumbers(FormDataKeys.Cols, 'Cols')}
+      {renderInputNumbers(FormDataKeys.Cols, 'Cols', styles['input'])}
       <br />
-      {renderInputNumbers(FormDataKeys.Rows, 'Rows')}
+      {renderInputNumbers(FormDataKeys.Rows, 'Rows', styles['input'])}
       <br />
-      {formStatus === FormStatus.FilledAlphabetSoup && renderSearch()}
+      {formStatus === FormStatus.FilledAlphabetSoup && renderSearch(styles['input'])}
       <br />
       <button
         onClick={createAlphabetSoup}
@@ -30,14 +30,14 @@ export function AlphabetSoup() {
       >
         Create alphabet soup
       </button>
-      {' '}
+      &nbsp; &nbsp;
       <button
         onClick={saveAlphabetSoup}
         disabled={formStatus !== FormStatus.CreatedAlphabetSoup}
       >
         Save alphabet soup
       </button>
-      {' '}
+      &nbsp; &nbsp;
       <button
         onClick={resetForm}
       >

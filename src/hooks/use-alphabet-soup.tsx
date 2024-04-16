@@ -33,12 +33,13 @@ export function useAlphabetSoup() {
     }));
   }
 
-  const renderInputNumbers = (key: FormDataKeys, text: string) => (
+  const renderInputNumbers = (key: FormDataKeys, text: string, classInput: string) => (
     <div>
-      { text }: {' '}
+      { text }: &nbsp; &nbsp; &nbsp;
       <input
         type="text"
         value={formData[key]}
+        className={classInput}
         onChange={(e) => updateFormData(e.target.value, key)}
         disabled={formStatus !== FormStatus.FillColsAndRows}
       />
@@ -180,14 +181,15 @@ export function useAlphabetSoup() {
     toast.error('Word not found');
   }
 
-  const renderSearch = () => (
+  const renderSearch = (classInput: string) => (
     <div>
       <input
         type="text"
         value={formData[FormDataKeys.Search]}
+        className={classInput}
         onChange={(e) => updateFormData(e.target.value, FormDataKeys.Search)}
       />
-      {' '}
+      &nbsp; &nbsp;
       <button onClick={findWordInAlphabetSoup}>Search</button>
     </div>
   );
