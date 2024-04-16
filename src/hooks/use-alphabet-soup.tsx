@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { FormDataKeys } from "../types/form-data-keys.enum";
 import { FormStatus } from "../types/form-status.enum";
 import * as alphabetSoupMock from "../mocks/alphabet-soup.mock";
+import { Combinations } from "../types/combinations.enum";
 
 export function useAlphabetSoup() {
   const [formData, setFormData] = useState<Record<FormDataKeys, string>>({
@@ -12,6 +13,12 @@ export function useAlphabetSoup() {
   });
   const [formStatus, setFormStatus] = useState(FormStatus.FilledAlphabetSoup);
   const [alphabetSoup, setAlphabetSoup] = useState<string[][]>(alphabetSoupMock.alphabetSoup);
+  const [combinations, setCombinations] = useState<Record<Combinations, string[]>>({
+    [Combinations.Horizontally]: [],
+    [Combinations.HorizontallyInverted]: [],
+    [Combinations.Vertical]: [],
+    [Combinations.VerticalInverted]: [],
+  });
 
   const updateFormData = (value: string, key: FormDataKeys) => {
     setFormData((prevState) => ({
@@ -54,7 +61,45 @@ export function useAlphabetSoup() {
   }
 
   const resetForm = () => {
+    generateCombinations()
+    return;
     setFormStatus(FormStatus.FillColsAndRows);
+  }
+
+  const generateCombinations = () => {
+    const [horizontally, horizontallyInverted] = alphabetSoup
+      .reduce<[ Horizontally: string[], HorizontallyInverted: string[]]>((
+        [ horizontally, horizontallyInverted ], row
+      ) => {
+        const rowString = row.join('').toLowerCase();
+        const rowReverseString = [...row].reverse().join('').toLowerCase();
+
+        return [
+          [...horizontally, rowString ],
+          [...horizontallyInverted, rowReverseString ],
+        ];
+      }, [[], []]);
+
+    // const [vertical, verticalInverted] = alphabetSoup
+    //   .reduce<[ Horizontally: string[], HorizontallyInverted: string[]]>((
+    //     [ vertical, verticalInverted ], row
+    //   ) => {
+    //     const rowString = row.join('').toLowerCase();
+    //     const rowReverseString = [...row].reverse().join('').toLowerCase();
+
+    //     return [
+    //       [...vertical, rowString ],
+    //       [...verticalInverted, rowReverseString ],
+    //     ];
+    //   }, [[], []]);
+
+    setCombinations((prevState) => ({
+      ...prevState,
+      [Combinations.Horizontally]: horizontally,
+      [Combinations.HorizontallyInverted]: horizontallyInverted,
+    }));
+    
+    
   }
 
   const saveAlphabetSoup = () => {
@@ -63,11 +108,13 @@ export function useAlphabetSoup() {
     }
 
     setFormStatus(FormStatus.FilledAlphabetSoup);
+    generateCombinations();
   }
 
   const findWordInAlphabetSoup = () => {
+    return;
     const search = formData[FormDataKeys.Search].toLowerCase();
-    const wasFound = alphabetSoup.some((row) => {
+    const wasFoundInHorizontally = alphabetSoup.some((row) => {
       const rowString = row.join('').toLowerCase();
       
       if (rowString.includes(search)) {
@@ -81,8 +128,12 @@ export function useAlphabetSoup() {
         return true;
       };
     });
+
+    const wasFound = [
+      wasFoundInHorizontally,
+    ];
     
-    if (!wasFound) return alert('Word not found');
+    if (!wasFound.some((value) => value)) return alert('Word not found');
   }
 
   const renderSearch = () => (
@@ -95,7 +146,10 @@ export function useAlphabetSoup() {
       {' '}
       <button onClick={findWordInAlphabetSoup}>Search</button>
     </div>
-  )
+  );
+
+  // console.log(combinations);
+
 
   return {
     renderInputNumbers,
