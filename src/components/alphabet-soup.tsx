@@ -22,7 +22,7 @@ export function AlphabetSoup() {
       <br />
       {renderInputNumbers(FormDataKeys.Rows, 'Rows')}
       <br />
-      {renderSearch()}
+      {formStatus === FormStatus.FilledAlphabetSoup && renderSearch()}
       <br />
       <button
         onClick={createAlphabetSoup}

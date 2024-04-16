@@ -7,17 +7,21 @@ import { Combinations } from "../types/combinations.enum";
 
 export function useAlphabetSoup() {
   const [formData, setFormData] = useState<Record<FormDataKeys, string>>({
-    [FormDataKeys.Cols]: alphabetSoupMock.cols,
-    [FormDataKeys.Rows]: alphabetSoupMock.rows,
+    [FormDataKeys.Cols]: '' || alphabetSoupMock.cols,
+    [FormDataKeys.Rows]: '' || alphabetSoupMock.rows,
     [FormDataKeys.Search]: '',
   });
-  const [formStatus, setFormStatus] = useState(FormStatus.FilledAlphabetSoup);
-  const [alphabetSoup, setAlphabetSoup] = useState<string[][]>(alphabetSoupMock.alphabetSoup);
+  const [formStatus, setFormStatus] = useState(FormStatus.FillColsAndRows);
+  const [alphabetSoup, setAlphabetSoup] = useState<string[][]>([] || alphabetSoupMock.alphabetSoup);
   const [combinations, setCombinations] = useState<Record<Combinations, string[]>>({
     [Combinations.Horizontally]: [],
     [Combinations.HorizontallyInverted]: [],
     [Combinations.Vertical]: [],
     [Combinations.VerticalInverted]: [],
+    [Combinations.Diagonal_UTD_LTR]: [],
+    [Combinations.Diagonal_UTD_RTL]: [],
+    [Combinations.Diagonal_DTU_LTR]: [],
+    [Combinations.Diagonal_DTU_RTL]: [],
   });
 
   const updateFormData = (value: string, key: FormDataKeys) => {
@@ -61,51 +65,92 @@ export function useAlphabetSoup() {
   }
 
   const resetForm = () => {
-    generateCombinations()
-    return;
     setFormStatus(FormStatus.FillColsAndRows);
   }
 
-  const parseData = (data: string[][]) => (
-    data.reduce<[ Word: string[], WordInverted: string[]]>((
-      [ word, wordInverted ], row
+  const parseData = (array: string[][]) => (
+    array.reduce<[ Words: string[], WordsInverted: string[]]>((
+      [ words, wordsInverted ], row
     ) => {
       const rowString = row.join('').toLowerCase();
       const rowStringInverted = [...row].reverse().join('').toLowerCase();
-
       return [
-        [...word, rowString ],
-        [...wordInverted, rowStringInverted ],
+        [...words, rowString ],
+        [...wordsInverted, rowStringInverted ],
       ];
     }, [[], []])
   );
 
+  const extractDiagonalsFromMatrix = (matrix: string[][]) => {
+    const numberOfColumns = matrix[0].length;
+    const numberOfRows = matrix.length;
+
+    /**
+     * U -> Up
+     * T -> To
+     * D -> Down
+     * L -> Left
+     * R -> Right
+    */
+
+    let diagonalUTDLTR: string[] = [];
+    let diagonalDTULTR: string[] = [];
+  
+    const collectDiagonalWords = (data: string[][], diagonalOffset: number, isSecondary = false) => (
+      Array
+        .from({ length: data.length }, (__, rowIndex) => {
+          const columnIndex = rowIndex + diagonalOffset;
+          if (!(columnIndex >= 0 && columnIndex < numberOfColumns)) return '';
+          return data[isSecondary ? (data.length - 1 - rowIndex) : rowIndex][columnIndex];
+          
+        })
+        .filter(char => char !== '')
+        .join('')
+        .toLowerCase()
+    );
+
+    const reverseWordsFromArray = (data: string[]) => (
+      data.map((word) => word.split('').reverse().join(''))
+    );
+  
+    for (let diagonalOffset = -numberOfRows + 1; diagonalOffset < numberOfColumns; diagonalOffset++) {
+      const primaryDiagonalLTR = collectDiagonalWords(matrix, diagonalOffset);
+      const secondaryDiagonalLTR = collectDiagonalWords(matrix, diagonalOffset, true);
+      if (primaryDiagonalLTR) diagonalUTDLTR.push(primaryDiagonalLTR);
+      if (secondaryDiagonalLTR) diagonalDTULTR.push(secondaryDiagonalLTR);
+    }
+
+    const diagonalUTDRTL = reverseWordsFromArray(diagonalDTULTR);
+    const diagonalDTURTL = reverseWordsFromArray(diagonalUTDLTR);
+
+    return {
+      diagonalUTDLTR,
+      diagonalDTULTR,
+      diagonalUTDRTL,
+      diagonalDTURTL
+    };
+  };
+
   const generateCombinations = () => {
     const [horizontally, horizontallyInverted] = parseData(alphabetSoup);
-    const verticalData = alphabetSoup.reduce<string[][]>((acc, row) => {
-        if (acc.length) {
-          row.forEach((col, colIndex) => {
-            acc[colIndex] = [
-              ...acc[colIndex],
-              col.toLowerCase(),
-            ];
-          });
-          return acc;
-        }
+    const [vertical, verticalInverted] = parseData(_.zip(...alphabetSoup) as string[][]);
+    const {
+      diagonalDTULTR,
+      diagonalDTURTL,
+      diagonalUTDLTR,
+      diagonalUTDRTL,
+    } = extractDiagonalsFromMatrix(alphabetSoup);
 
-        return row.map((col) => [col.toLowerCase()]);
-      }, []);
-    const [vertical, verticalInverted] = parseData(verticalData);
-
-    setCombinations((prevState) => ({
-      ...prevState,
+    setCombinations({
       [Combinations.Horizontally]: horizontally,
       [Combinations.HorizontallyInverted]: horizontallyInverted,
       [Combinations.Vertical]: vertical,
       [Combinations.VerticalInverted]: verticalInverted,
-    }));
-    
-    
+      [Combinations.Diagonal_DTU_LTR]: diagonalDTULTR,
+      [Combinations.Diagonal_DTU_RTL]: diagonalDTURTL,
+      [Combinations.Diagonal_UTD_LTR]: diagonalUTDLTR,
+      [Combinations.Diagonal_UTD_RTL]: diagonalUTDRTL,
+    });
   }
 
   const saveAlphabetSoup = () => {
@@ -118,28 +163,17 @@ export function useAlphabetSoup() {
   }
 
   const findWordInAlphabetSoup = () => {
-    return;
-    const search = formData[FormDataKeys.Search].toLowerCase();
-    const wasFoundInHorizontally = alphabetSoup.some((row) => {
-      const rowString = row.join('').toLowerCase();
-      
-      if (rowString.includes(search)) {
-        alert('Word found horizontally');
-        return true;
-      };
-      
-      const rowReverseString = [...row].reverse().join('').toLowerCase();
-      if (rowReverseString.includes(search)) {
-        alert('Word found horizontally (upside down)');
-        return true;
-      };
-    });
+    const wordToFind = formData[FormDataKeys.Search].toLowerCase();
+    const findWordInArray = (words: string[]) => (
+      words.some((word) => word.includes(wordToFind))
+    );
 
-    const wasFound = [
-      wasFoundInHorizontally,
-    ];
-    
-    if (!wasFound.some((value) => value)) return alert('Word not found');
+    for (const combinationKey of Object.keys(combinations)) {
+      if (findWordInArray(combinations[combinationKey as Combinations])) {
+        return alert(`Word was found "${combinationKey}"`);
+      }
+    }
+    alert('Word not found');
   }
 
   const renderSearch = () => (
@@ -153,9 +187,6 @@ export function useAlphabetSoup() {
       <button onClick={findWordInAlphabetSoup}>Search</button>
     </div>
   );
-
-  console.log(combinations);
-
 
   return {
     renderInputNumbers,
