@@ -66,37 +66,43 @@ export function useAlphabetSoup() {
     setFormStatus(FormStatus.FillColsAndRows);
   }
 
+  const parseData = (data: string[][]) => (
+    data.reduce<[ Word: string[], WordInverted: string[]]>((
+      [ word, wordInverted ], row
+    ) => {
+      const rowString = row.join('').toLowerCase();
+      const rowStringInverted = [...row].reverse().join('').toLowerCase();
+
+      return [
+        [...word, rowString ],
+        [...wordInverted, rowStringInverted ],
+      ];
+    }, [[], []])
+  );
+
   const generateCombinations = () => {
-    const [horizontally, horizontallyInverted] = alphabetSoup
-      .reduce<[ Horizontally: string[], HorizontallyInverted: string[]]>((
-        [ horizontally, horizontallyInverted ], row
-      ) => {
-        const rowString = row.join('').toLowerCase();
-        const rowReverseString = [...row].reverse().join('').toLowerCase();
+    const [horizontally, horizontallyInverted] = parseData(alphabetSoup);
+    const verticalData = alphabetSoup.reduce<string[][]>((acc, row) => {
+        if (acc.length) {
+          row.forEach((col, colIndex) => {
+            acc[colIndex] = [
+              ...acc[colIndex],
+              col.toLowerCase(),
+            ];
+          });
+          return acc;
+        }
 
-        return [
-          [...horizontally, rowString ],
-          [...horizontallyInverted, rowReverseString ],
-        ];
-      }, [[], []]);
-
-    // const [vertical, verticalInverted] = alphabetSoup
-    //   .reduce<[ Horizontally: string[], HorizontallyInverted: string[]]>((
-    //     [ vertical, verticalInverted ], row
-    //   ) => {
-    //     const rowString = row.join('').toLowerCase();
-    //     const rowReverseString = [...row].reverse().join('').toLowerCase();
-
-    //     return [
-    //       [...vertical, rowString ],
-    //       [...verticalInverted, rowReverseString ],
-    //     ];
-    //   }, [[], []]);
+        return row.map((col) => [col.toLowerCase()]);
+      }, []);
+    const [vertical, verticalInverted] = parseData(verticalData);
 
     setCombinations((prevState) => ({
       ...prevState,
       [Combinations.Horizontally]: horizontally,
       [Combinations.HorizontallyInverted]: horizontallyInverted,
+      [Combinations.Vertical]: vertical,
+      [Combinations.VerticalInverted]: verticalInverted,
     }));
     
     
@@ -148,7 +154,7 @@ export function useAlphabetSoup() {
     </div>
   );
 
-  // console.log(combinations);
+  console.log(combinations);
 
 
   return {
