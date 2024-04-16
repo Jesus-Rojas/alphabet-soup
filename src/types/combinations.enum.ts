@@ -1,3 +1,11 @@
+/**
+ * U -> Up
+ * T -> To
+ * D -> Down
+ * L -> Left
+ * R -> Right
+*/
+
 export enum Combinations {
   Horizontally = 'HORIZONTAL',
   HorizontallyInverted = 'INVERTED HORIZONTAL',

@@ -4,6 +4,8 @@ import { FormDataKeys } from "../types/form-data-keys.enum";
 import { FormStatus } from "../types/form-status.enum";
 import * as alphabetSoupMock from "../mocks/alphabet-soup.mock";
 import { Combinations } from "../types/combinations.enum";
+import { toast } from 'sonner'
+
 
 export function useAlphabetSoup() {
   const [formData, setFormData] = useState<Record<FormDataKeys, string>>({
@@ -51,7 +53,7 @@ export function useAlphabetSoup() {
       rows === 0 ||
       [cols, rows].some((number) => isNaN(number) || number <= 0)
     ) {
-      return alert('Verify (cols, rows). Both should be numbers and should be more than zero');
+      return toast.error('Verify (cols, rows). Both should be numbers and should be more than zero');
     }
 
     setAlphabetSoup(new Array(rows).fill('').map(() => new Array(cols).fill('')));
@@ -64,9 +66,7 @@ export function useAlphabetSoup() {
     setAlphabetSoup(newAlphabetSoup);
   }
 
-  const resetForm = () => {
-    setFormStatus(FormStatus.FillColsAndRows);
-  }
+  const resetForm = () => setFormStatus(FormStatus.FillColsAndRows);
 
   const parseData = (array: string[][]) => (
     array.reduce<[ Words: string[], WordsInverted: string[]]>((
@@ -102,7 +102,6 @@ export function useAlphabetSoup() {
           const columnIndex = rowIndex + diagonalOffset;
           if (!(columnIndex >= 0 && columnIndex < numberOfColumns)) return '';
           return data[isSecondary ? (data.length - 1 - rowIndex) : rowIndex][columnIndex];
-          
         })
         .filter(char => char !== '')
         .join('')
@@ -155,7 +154,7 @@ export function useAlphabetSoup() {
 
   const saveAlphabetSoup = () => {
     if (alphabetSoup.some((row) => row.some((col) => col === ''))) {
-      return alert('All fields are required')
+      return toast.error('All fields are required')
     }
 
     setFormStatus(FormStatus.FilledAlphabetSoup);
@@ -164,16 +163,21 @@ export function useAlphabetSoup() {
 
   const findWordInAlphabetSoup = () => {
     const wordToFind = formData[FormDataKeys.Search].toLowerCase();
+    
+    if (!wordToFind.length) return;
+
     const findWordInArray = (words: string[]) => (
       words.some((word) => word.includes(wordToFind))
     );
 
+
     for (const combinationKey of Object.keys(combinations)) {
       if (findWordInArray(combinations[combinationKey as Combinations])) {
-        return alert(`Word was found "${combinationKey}"`);
+        return toast.success(`Word was found "${combinationKey}"`);
       }
     }
-    alert('Word not found');
+
+    toast.error('Word not found');
   }
 
   const renderSearch = () => (
